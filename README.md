@@ -13,7 +13,7 @@ cd /path/to/htdocs
 Clone the repository and directly checkout the UserAuth branch:
 
 ```bash
-git clone --branch UserAuth https://github.com/ennonn/admin.git
+git clone --branch Cart-Checkout https://github.com/ennonn/admin.git
 ```
 
 ### 2. Setup the Database
@@ -26,7 +26,7 @@ Import the SQL file ```ecommerce_db_updated.sql``` from the cloned repository.
 
 ### 3. Configure the .env File
 
-Copy the .env.example file and rename it to .env:
+Copy the .env.example file and rename it to .env
 
 Open the .env file and configure it with your local environment settings, including database connection, base URL, and Mailtrap credentials.
 
