@@ -3,31 +3,43 @@
 namespace Routes\BuyerRoute;
 
 use App\Controllers\BuyerController;
-use App\Providers\Auth\JWTProvider;
+use App\Providers\Validation\ValidateTokenProvider;
+use Config\DatabaseConnection;
 
 class BuyerRoute
 {
-    private $jwtProvider;
+    private $db;
+    private $tokenValidator;
 
     public function __construct()
     {
-        $this->jwtProvider = new JWTProvider();
+        // Instantiate DatabaseConnection and ValidateTokenProvider
+        $dbConnection = new DatabaseConnection();
+        $this->db = $dbConnection->getConnection();
+        $this->tokenValidator = new ValidateTokenProvider($this->db);
     }
 
     public function handleBuyerRoute($uri, $method)
     {
-        $buyerController = new BuyerController();
+        // Instantiate BuyerController with dependencies
+        $buyerController = new BuyerController($this->db, $this->tokenValidator);
 
         // Normalize URI for accurate matching
         $uri = str_replace('/buyer', '', $uri);
 
-        // Extract and validate JWT token
+        // Retrieve and validate the JWT token
         $token = $this->getBearerToken();
+        if (!$token) {
+            $this->sendErrorResponse('Unauthorized: Token missing', 401);
+            return;
+        }
+        
         if (!$this->isTokenValid($token)) {
-            $this->sendErrorResponse('Unauthorized', 401);
+            $this->sendErrorResponse('Unauthorized: Invalid token', 401);
             return;
         }
 
+        // Route handling
         switch ($uri) {
             case '/cart/add':
                 if ($method === 'POST') {
@@ -70,26 +82,35 @@ class BuyerRoute
         }
     }
 
-    // JWT token validation
+    // Token validation
     private function isTokenValid($token)
     {
-        return $this->jwtProvider->verifyToken($token);
+        try {
+            $this->tokenValidator->validateToken($token);
+            return true;
+        } catch (\Exception $e) {
+            error_log('Token validation failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
-    // Extract Bearer token
+    // Extract Bearer token from the request headers
     private function getBearerToken()
     {
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (!empty($authHeader) && strpos($authHeader, 'Bearer ') !== false) {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if (!empty($authHeader) && strpos($authHeader, 'Bearer ') === 0) {
             return str_replace('Bearer ', '', $authHeader);
         }
-        return null;
+        return null; // Return null if token is not found
     }
 
     // Send JSON error response
     private function sendErrorResponse($message, $statusCode = 400)
     {
-        echo json_encode(['status' => 'error', 'message' => $message]);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $message
+        ]);
         http_response_code($statusCode);
     }
 }

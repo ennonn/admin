@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Config\DatabaseConnection;
 use PDO;
 
 class Order
 {
     private $db;
 
-    public function __construct()
+    public function __construct(PDO $db)
     {
-        $this->db = DatabaseConnection::getConnection();
+        $this->db = $db;
     }
 
     /* ====== Create Order ====== */
@@ -30,15 +29,15 @@ class Order
             $orderQuery->bindParam(':total_amount', $orderData['total_amount']);
             $orderQuery->bindParam(':status', $orderData['status']);
             $orderQuery->execute();
-            
+
             $orderId = $this->db->lastInsertId();
 
             // Insert each item into the `order_items` table
+            $itemQuery = $this->db->prepare("
+                INSERT INTO order_items (order_id, product_id, quantity, price) 
+                VALUES (:order_id, :product_id, :quantity, :price)
+            ");
             foreach ($orderData['items'] as $item) {
-                $itemQuery = $this->db->prepare("
-                    INSERT INTO order_items (order_id, product_id, quantity, price) 
-                    VALUES (:order_id, :product_id, :quantity, :price)
-                ");
                 $itemQuery->bindParam(':order_id', $orderId, PDO::PARAM_INT);
                 $itemQuery->bindParam(':product_id', $item['product_id'], PDO::PARAM_INT);
                 $itemQuery->bindParam(':quantity', $item['quantity'], PDO::PARAM_INT);
@@ -46,7 +45,6 @@ class Order
                 $itemQuery->execute();
             }
 
-            // Commit transaction
             $this->db->commit();
             return [
                 'status' => 'success',
@@ -54,7 +52,6 @@ class Order
                 'message' => 'Order created successfully'
             ];
         } catch (\Exception $e) {
-            // Rollback transaction if there is an error
             $this->db->rollBack();
             error_log("Order creation failed: " . $e->getMessage());
             return [
@@ -87,7 +84,6 @@ class Order
             ];
         }
 
-        // Organize items by order for easy access
         $orderHistory = [];
         foreach ($orders as $order) {
             $orderId = $order['order_id'];

@@ -2,23 +2,22 @@
 
 namespace App\Models;
 
-use Config\DatabaseConnection;
 use PDO;
 
 class Cart
 {
     private $db;
 
-    public function __construct()
+    public function __construct(PDO $db)
     {
-        $this->db = DatabaseConnection::getConnection();
+        $this->db = $db;
     }
 
     /* ====== Add Item to Cart ====== */
     public function addItemToCart($userId, $productId, $quantity)
     {
         $query = $this->db->prepare("
-            INSERT INTO cart (user_id, product_id, quantity) 
+            INSERT INTO cart_item (user_id, product_id, quantity) 
             VALUES (:user_id, :product_id, :quantity)
             ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
         ");
@@ -34,14 +33,14 @@ class Cart
     {
         $query = $this->db->prepare("
             SELECT 
-                p.id AS product_id, 
+                p.product_id AS product_id, 
                 p.product_name, 
                 p.price, 
-                c.quantity, 
-                (p.price * c.quantity) AS total 
-            FROM cart c 
-            JOIN products p ON c.product_id = p.id 
-            WHERE c.user_id = :user_id
+                ci.quantity, 
+                (p.price * ci.quantity) AS total 
+            FROM cart_item ci
+            JOIN product p ON ci.product_id = p.product_id 
+            WHERE ci.user_id = :user_id
         ");
         $query->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $query->execute();
@@ -64,7 +63,7 @@ class Cart
     public function updateCartItem($userId, $productId, $quantity)
     {
         $query = $this->db->prepare("
-            UPDATE cart 
+            UPDATE cart_item 
             SET quantity = :quantity 
             WHERE user_id = :user_id AND product_id = :product_id
         ");
@@ -79,7 +78,7 @@ class Cart
     public function removeItemFromCart($userId, $productId)
     {
         $query = $this->db->prepare("
-            DELETE FROM cart 
+            DELETE FROM cart_item 
             WHERE user_id = :user_id AND product_id = :product_id
         ");
         $query->bindParam(':user_id', $userId, PDO::PARAM_INT);
@@ -92,7 +91,7 @@ class Cart
     public function clearCart($userId)
     {
         $query = $this->db->prepare("
-            DELETE FROM cart 
+            DELETE FROM cart_item 
             WHERE user_id = :user_id
         ");
         $query->bindParam(':user_id', $userId, PDO::PARAM_INT);
