@@ -22,7 +22,7 @@ Open phpMyAdmin in your browser (e.g., http://localhost/phpmyadmin).
 
 Create a new database called ecommerce_db.
 
-Import the SQL file ```ecommerce_db_updated.sql``` from the cloned repository.
+Import the SQL file `ecommerce_db_updated.sql` from the cloned repository.
 
 ### 3. Configure the .env File
 
@@ -50,8 +50,8 @@ Log in to Mailtrap to handle the email functionality.
 
 The Mailtrap credentials are already included in the .env file.
 
-
 ### 5. Install Dependencies
+
 Navigate to your project directory and install dependencies using Composer:
 
 ```bash
@@ -63,7 +63,15 @@ composer install
 Ensure your local server (e.g., XAMPP or MAMP) is running, then access the app in your browser at:
 
 ### 7. API Documentation
+
 You can find the full API documentation here:
 <a href="https://documenter.getpostman.com/view/30788290/2sAY4shiko" target="_blank">API Documentation</a>
 
+### 8.. API DOCUMENTATION For Product Catalog
+
+<a href="https://lively-escape-863347.postman.co/workspace/5b5c7441-08d4-40d2-8582-7edb956abe9d/documentation/30601086-6ac63832-5397-4a2a-bddb-b876bdc7cd83"> Product Catalog Documentation
+
+### 9. API DOCUMENTATION FOR SHOPPING CARTS AND CHECKOUT
+
+<a href="https://documenter.getpostman.com/view/30607558/2sAYBd6ndu"> Shopping Cart and Checkout
 ......
